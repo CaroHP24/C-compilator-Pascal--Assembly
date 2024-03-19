@@ -24,45 +24,52 @@
 
 using namespace std;
 
-char current;				// Current car	
+char current;				// Current char	
 
-void ReadChar(void){		// Read character and skip spaces until 
+void ReadChar(void)
+{		// Read character and skip spaces until 
 				// non space character is read
-	while(cin.get(current) && (current==' '||current=='\t'||current=='\n'))
-	   	cin.get(current);
+	while(cin.get(current) && (current==' '||current=='\t'||current=='\n')) //tant ue entré pas fini et que c'est pas un espace
+	   	cin.get(current);//lit new char
 }
 
-void Error(string s){
-	cerr<< s << endl;
+void Error(string s)//erreur
+{
+	cerr<< s << endl;//envoi les erreurs sur une autre sortie
 	exit(-1);
 }
 
 // ArithmeticExpression := Term {AdditiveOperator Term}
-// Term := Digit | "(" ArithmeticExpression ")"
-// AdditiveOperator := "+" | "-"
+
 // Digit := "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9"
 
-	
-void AdditiveOperator(void){
-	if(current=='+'||current=='-')
+
+// AdditiveOperator := "+" | "-"
+void AdditiveOperator(void) //verifi si bien un operateur
+{
+	if(current=='+'||current=='-')//Si operateur additif
 		ReadChar();
 	else
 		Error("Opérateur additif attendu");	   // Additive operator expected
 }
 		
-void Digit(void){
+void Digit(void)
+{
 	if((current<'0')||(current>'9'))
 		Error("Chiffre attendu");		   // Digit expected
-	else{
-		cout << "\tpush $"<<current<<endl;
+	else
+	{
+		cout << "\tpush $"<<current<<endl; //quand chiffre je l'empile
 		ReadChar();
 	}
 }
 
 void ArithmeticExpression(void);			// Called by Term() and calls Term()
-
-void Term(void){
-	if(current=='('){
+// Term := Digit | "(" ArithmeticExpression ")"
+void Term(void)
+{
+	if(current=='(')//LL1
+	{
 		ReadChar();
 		ArithmeticExpression();
 		if(current!=')')
@@ -77,10 +84,13 @@ void Term(void){
 			Error("'(' ou chiffre attendu");
 }
 
-void ArithmeticExpression(void){
+
+void ArithmeticExpression(void)
+{
 	char adop;
 	Term();
-	while(current=='+'||current=='-'){
+	while(current=='+'||current=='-')
+	{
 		adop=current;		// Save operator in local variable
 		AdditiveOperator();
 		Term();
@@ -95,7 +105,8 @@ void ArithmeticExpression(void){
 
 }
 
-int main(void){	// First version : Source code on standard input and assembly code on standard output
+int main(void)
+{	// First version : Source code on standard input and assembly code on standard output
 	// Header for gcc assembler / linker
 	cout << "\t\t\t# This code was produced by the CERI Compiler"<<endl;
 	cout << "\t.text\t\t# The following lines contain the program"<<endl;
@@ -110,7 +121,8 @@ int main(void){	// First version : Source code on standard input and assembly co
 	// Trailer for the gcc assembler / linker
 	cout << "\tmovq %rbp, %rsp\t\t# Restore the position of the stack's top"<<endl;
 	cout << "\tret\t\t\t# Return from main function"<<endl;
-	if(cin.get(current)){
+	if(cin.get(current))
+	{
 		cerr <<"Caractères en trop à la fin du programme : ["<<current<<"]";
 		Error("."); // unexpected characters at the end of program
 	}
