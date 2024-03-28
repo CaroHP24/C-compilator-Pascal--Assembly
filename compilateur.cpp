@@ -46,7 +46,16 @@ void ArithmeticExpression(void);			// Called by Term() and calls Term()
 // Digit := "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9"
 //Exp:=ExpA[opReal Exp A]
 //opReal := '<'|'>'|'='|'!'
-
+char OpReal()
+{
+	char opreal=current;
+	if(current != '<' || current !='>' || current !='=' || current !='!') //LL(1)
+	{
+		Error("Un operateur relationnel attendu");
+	}
+	ReadChar();
+	return opreal;
+}
 void Exp()
 {
 	char opreal;
@@ -62,13 +71,7 @@ void Exp()
 		}
 	}
 }
-char OpReal()
-{
-	if(current != '<' || current !='>' || current !='=' || current !='!')
-	{
-		Error("Un operateur relationnel attendu");
-	}
-}
+
 
 // AdditiveOperator := "+" | "-"
 void AdditiveOperator(void) //verifi si bien un operateur
