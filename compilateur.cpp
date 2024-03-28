@@ -46,12 +46,13 @@ void ArithmeticExpression(void);			// Called by Term() and calls Term()
 // Digit := "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9"
 //Exp:=ExpA[opReal Exp A]
 //opReal := '<'|'>'|'='|'!'
+
 char OpReal()
 {
 	char opreal=current;
-	if(current != '<' || current !='>' || current !='=' || current !='!') //LL(1)
+	if(current != '<' && current !='>' && current !='=' && current !='!') //LL(1)
 	{
-		Error("Un operateur relationnel attendu");
+		Error("Pas ça qui est attendu");
 	}
 	ReadChar();
 	return opreal;
@@ -64,11 +65,30 @@ void Exp()
 	{
 		opreal=OpReal();
 		ArithmeticExpression();
+		cout<<"\tpop %rax"<<endl;
+		cout<<"\tpop %rbx"<<endl;
+		cout<<"\tcmpq %rax, %rbx"<<endl;
 		switch (opreal) 
 		{
-			case '<' :	cout<<"\tjb"<<endl;break;
-			default: Error("Un operateur relationnel attendu");
+            case '<':
+                cout <<"\tjb Vrai" << endl;
+                break;
+            case '>':
+                cout <<"\tja Vrai" << endl;
+                break;
+            case '=':
+                cout <<"\tje Vrai" << endl;
+                break;
+            case '!':
+                cout <<"\tjne Vrai" << endl;
+                break;
+            default:
+                Error("Opérateur relationnel invalide");
 		}
+		cout<<"Faux:\t push $0 \t\t\t #faux"<<endl;
+		cout<<"\t jmp FinExp"<<endl;
+		cout<<"Vrai:\t push $-1 \t\t\t #vrai"<<endl;
+		cout<<"FinExp:"<<endl;
 	}
 }
 
@@ -144,7 +164,8 @@ int main(void)
 
 	// Let's proceed to the analysis and code production
 	ReadChar();
-	ArithmeticExpression();
+	//ArithmeticExpression();
+	Exp();
 	ReadChar();
 	// Trailer for the gcc assembler / linker
 	cout << "\tmovq %rbp, %rsp\t\t# Restore the position of the stack's top"<<endl;
@@ -154,7 +175,7 @@ int main(void)
 		cerr <<"Caractères en trop à la fin du programme : ["<<current<<"]";
 		Error("."); // unexpected characters at the end of program
 	}
-	//Exp();
+	
 
 }
 		
