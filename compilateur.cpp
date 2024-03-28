@@ -38,11 +38,37 @@ void Error(string s)//erreur
 	cerr<< s << endl;//envoi les erreurs sur une autre sortie
 	exit(-1);
 }
+void ArithmeticExpression(void);			// Called by Term() and calls Term()
+// Term := Digit | "(" ArithmeticExpression ")"
 
 // ArithmeticExpression := Term {AdditiveOperator Term}
 
 // Digit := "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9"
+//Exp:=ExpA[opReal Exp A]
+//opReal := '<'|'>'|'='|'!'
 
+void Exp()
+{
+	char opreal;
+	ArithmeticExpression();
+	if(current == '<' || current =='>' || current =='=' || current =='!')
+	{
+		opreal=OpReal();
+		ArithmeticExpression();
+		switch (opreal) 
+		{
+			case '<' :	cout<<"\tjb"<<endl;break;
+			default: Error("Un operateur relationnel attendu");
+		}
+	}
+}
+char OpReal()
+{
+	if(current != '<' || current !='>' || current !='=' || current !='!')
+	{
+		Error("Un operateur relationnel attendu");
+	}
+}
 
 // AdditiveOperator := "+" | "-"
 void AdditiveOperator(void) //verifi si bien un operateur
@@ -64,8 +90,7 @@ void Digit(void)
 	}
 }
 
-void ArithmeticExpression(void);			// Called by Term() and calls Term()
-// Term := Digit | "(" ArithmeticExpression ")"
+
 void Term(void)
 {
 	if(current=='(')//LL1
@@ -126,6 +151,7 @@ int main(void)
 		cerr <<"Caractères en trop à la fin du programme : ["<<current<<"]";
 		Error("."); // unexpected characters at the end of program
 	}
+	//Exp();
 
 }
 		
