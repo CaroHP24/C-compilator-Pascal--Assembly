@@ -3,8 +3,8 @@
 	.globl main	# The main function must be visible from outside
 main:			# The main function body :
 	movq %rsp, %rbp	# Save the position of the stack's top
-	push $5
-	push $6
+	push $32
+	push $22
 	pop %rax
 	pop %rbx
 	cmpq %rax, %rbx

@@ -16,47 +16,98 @@
 //  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // Build with "make compilateur"
-//hhh
+
 
 #include <string>
 #include <iostream>
 #include <cstdlib>
+#include <set> //gerer des ensembles
 
 using namespace std;
 
-char current, lookedAhead;                // Current char    
+char current, lookedAhead;                // Current char, next char (LL(2))   
 int NLookedAhead=0;
-
-void ReadChar(void){
-    if(NLookedAhead>0){
-        current=lookedAhead;    // Char has already been read
-        NLookedAhead--;
-    }
-    else
-        // Read character and skip spaces until 
-        // non space character is read
-        while(cin.get(current) && (current==' '||current=='\t'||current=='\n'));
-}
-
-void LookAhead(void){
-    while(cin.get(lookedAhead) && (lookedAhead==' '||lookedAhead=='\t'||lookedAhead=='\n'));
-    NLookedAhead++;
-}
-
-void Error(string s)//erreur
+void Error(string s)//error
 {
 	cerr<< s << endl;//envoi les erreurs sur une autre sortie
 	exit(-1);
 }
-void ArithmeticExpression(void);			// Called by Term() and calls Term()
-// Term := Digit | "(" ArithmeticExpression ")"
+void ReadChar()
+{
+    if(NLookedAhead>0)
+	{
+        current=lookedAhead;    // Char has already been read
+        NLookedAhead--;
+    }
+    else
+	{
+        // Read character and skip spaces until 
+        // non space character is read
+        while(cin.get(current) && (current==' '||current=='\t'||current=='\n'));
+	}
+}
+void DeclarationPart();
+
+void StatementPart();
+// Program := [DeclarationPart] StatementPart
+void Program()
+{
+	if (current=='[')
+	{
+		DeclarationPart();
+	}
+	StatementPart();
+}
+
+// DeclarationPart := "[" Letter {"," Letter} "]"
+void DeclarationPart()
+{
+	if(current!=('['))
+	{
+		Error("'[ attendu'");
+	}
+}
+// StatementPart := Statement {";" Statement} "."
+void StatementPart()
+{
+
+}
+// Statement := AssignementStatement
+// AssignementStatement := Letter "=" Expression
+
+// Expression := SimpleExpression [RelationalOperator SimpleExpression]
+// SimpleExpression := Term {AdditiveOperator Term}
+// Term := Factor {MultiplicativeOperator Factor}
+// Factor := Number | Letter | "(" Expression ")"| "!" Factor
+
+
+
+// MultiplicativeOperator := "*" | "/" | "%" | "&&"
+
+void LookAhead()
+{
+    while(cin.get(lookedAhead) && (lookedAhead==' '||lookedAhead=='\t'||lookedAhead=='\n'));
+    NLookedAhead++;
+}
+// Letter := "a"|...|"z"
+void Letter()
+{
+	if((current<'a')||(current>'z')) //si asci sup a asci de a et inferieur asci de z
+	{
+		Error("Lettre attendue");		   // Letter expected
+	}	
+	else
+	{
+		cout << "\tpush "<<current<<endl; //quand est une lettre je l'empile
+		ReadChar();
+	}
+}
 
 // ArithmeticExpression := Term {AdditiveOperator Term}
+void ArithmeticExpression();			// Called by Term() and calls Term()
 
-// Digit := "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9"
-//Exp:=ExpA[opReal Exp A]
+
 //opReal := '<'|'>'|'='|'!'
-
 char OpReal()
 {
 	char opreal=current;
@@ -73,6 +124,8 @@ char OpReal()
 	ReadChar();
 	return opreal;
 }
+// RelationalOperator := "==" | "!=" | "<" | ">" | "<=" | ">=" 
+//Exp:=ExpA[opReal Exp A]
 void Exp()
 {
 	char opreal;
@@ -139,18 +192,38 @@ void Exp()
 }
 
 
-// AdditiveOperator := "+" | "-"
-void AdditiveOperator(void) //verifi si bien un operateur
+// AdditiveOperator := "+" | "-" | "||"
+void AdditiveOperator() //verifi si bien un operateur
 {
 	if(current=='+'||current=='-')//Si operateur additif
+	{
 		ReadChar();
+	}
 	else
-		Error("Opérateur additif attendu");	   // Additive operator expected
-}
+	{
+		if(current=='|')
+		{
+			ReadChar();
+			if(current!='|')
+			{
+				Error("on veut '||'");
+			}
+			else
+			{
+				ReadChar();
+			}
+		}
+		else
+			{
+				Error("Opérateur additif attendu");	   // Additive operator expected
+			}
+	}
 		
-void Digit(void)
+}
+// Digit := "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9"
+void Digit()
 {
-	if((current<'0')||(current>'9'))
+	if((current<'0')||(current>'9')) //si asci sup a asci de 0 et inferieur asci de 9
 		Error("Chiffre attendu");		   // Digit expected
 	else
 	{
@@ -158,9 +231,32 @@ void Digit(void)
 		ReadChar();
 	}
 }
-
-
-void Term(void)
+// Number := Digit{Digit}
+void Number()
+{
+	unsigned long long number;//nb 64bits
+	string val;
+	if(current<'0' || current>'9')
+	{
+		Error("Nombre attendu");//Digit expected
+	}
+	else
+	{
+		number=current-'0';
+	}
+	ReadChar();
+	while(current>='0' and current<='9')
+	{
+		number*=10;
+		number+=current-'0';
+		ReadChar();
+	}
+	
+	cout << "\tpush $"<<val<<endl;
+	
+}
+// Term := Digit | "(" ArithmeticExpression ")"
+void Term()
 {
 	if(current=='(')//LL1
 	{
@@ -173,17 +269,17 @@ void Term(void)
 	}
 	else 
 		if (current>='0' && current <='9')
-			Digit();
+			Number();
 	    else
 			Error("'(' ou chiffre attendu");
 }
 
 
-void ArithmeticExpression(void)
+void ArithmeticExpression()
 {
 	char adop;
 	Term();
-	while(current=='+'||current=='-')
+	while(current=='+'||current=='-' ||current=='|')
 	{
 		adop=current;		// Save operator in local variable
 		AdditiveOperator();
@@ -199,10 +295,10 @@ void ArithmeticExpression(void)
 
 }
 
-int main(void)
+int main()
 {	// First version : Source code on standard input and assembly code on standard output
 	// Header for gcc assembler / linker
-	cout << "\t\t\t# This code was produced by the CERI Compiler"<<endl;
+	cout << "\t\t\t# This code was produced by the CERI Compiler"<<endl;
 	cout << "\t.text\t\t# The following lines contain the program"<<endl;
 	cout << "\t.globl main\t# The main function must be visible from outside"<<endl;
 	cout << "main:\t\t\t# The main function body :"<<endl;
@@ -227,7 +323,10 @@ int main(void)
 		
 			
 
+/*
 
 
 
 
+
+*/
