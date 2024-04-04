@@ -8,7 +8,7 @@ main:			# The main function body :
 	pop %rax
 	pop %rbx
 	cmpq %rax, %rbx
-	je Vrai
+	jne Vrai
 Faux:	 push $0 			 #faux
 	 jmp FinExp
 Vrai:	 push $-1 			 #vrai

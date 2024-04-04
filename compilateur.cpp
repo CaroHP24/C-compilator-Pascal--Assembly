@@ -64,7 +64,7 @@ char OpReal()
 	{
 		Error("Pas ça qui est attendu");
 	}
-	if (current == '<' || current =='>' ) //LL(2) - opérateur à deux caractères
+	if (current == '<' || current =='>' || current =='!' || current =='=' ) //LL(2) - opérateur à deux caractères
     {
 		LookAhead();
         ReadChar(); // Passer au caractère suivant
