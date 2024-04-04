@@ -24,13 +24,23 @@
 
 using namespace std;
 
-char current;				// Current char	
+char current, lookedAhead;                // Current char    
+int NLookedAhead=0;
 
-void ReadChar(void)
-{		// Read character and skip spaces until 
-				// non space character is read
-	while(cin.get(current) && (current==' '||current=='\t'||current=='\n')) //tant ue entré pas fini et que c'est pas un espace
-	   	cin.get(current);//lit new char
+void ReadChar(void){
+    if(NLookedAhead>0){
+        current=lookedAhead;    // Char has already been read
+        NLookedAhead--;
+    }
+    else
+        // Read character and skip spaces until 
+        // non space character is read
+        while(cin.get(current) && (current==' '||current=='\t'||current=='\n'));
+}
+
+void LookAhead(void){
+    while(cin.get(lookedAhead) && (lookedAhead==' '||lookedAhead=='\t'||lookedAhead=='\n'));
+    NLookedAhead++;
 }
 
 void Error(string s)//erreur
@@ -54,6 +64,12 @@ char OpReal()
 	{
 		Error("Pas ça qui est attendu");
 	}
+	if (current == '<' || current =='>' ) //LL(2) - opérateur à deux caractères
+    {
+		LookAhead();
+        ReadChar(); // Passer au caractère suivant
+
+    }
 	ReadChar();
 	return opreal;
 }
@@ -71,17 +87,47 @@ void Exp()
 		switch (opreal) 
 		{
             case '<':
-                cout <<"\tjb Vrai" << endl;
-                break;
+				if(lookedAhead='>')
+				{
+					cout <<"\tjne Vrai" << endl;
+					break;
+				}
+				if(lookedAhead='=')
+				{
+					cout <<"\tjbe Vrai" << endl;
+                	break;
+				}
+				else
+				{
+					cout <<"\tjb Vrai" << endl;
+					break;
+				}	
             case '>':
-                cout <<"\tja Vrai" << endl;
-                break;
+				if(lookedAhead='=')
+				{
+					cout <<"\tjae Vrai" << endl;
+                	break;
+				}
+				else
+				{
+					cout <<"\tja Vrai" << endl;
+                	break;
+				}
             case '=':
-                cout <<"\tje Vrai" << endl;
+				if(lookedAhead= '=')
+				{
+					cout <<"\tje Vrai" << endl;
+					break;
+				}
                 break;
             case '!':
-                cout <<"\tjne Vrai" << endl;
+				if(lookedAhead='=')
+				{
+					cout <<"\tjne Vrai" << endl;
+                	break;
+				}
                 break;
+				
             default:
                 Error("Opérateur relationnel invalide");
 		}
@@ -128,7 +174,7 @@ void Term(void)
 	else 
 		if (current>='0' && current <='9')
 			Digit();
-	     	else
+	    else
 			Error("'(' ou chiffre attendu");
 }
 
