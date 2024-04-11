@@ -27,11 +27,14 @@ using namespace std;
 
 char current, lookedAhead;                // Current char, next char (LL(2))   
 int NLookedAhead=0;
+
+
 void Error(string s)//error
 {
 	cerr<< s << endl;//envoi les erreurs sur une autre sortie
 	exit(-1);
 }
+
 void ReadChar()
 {
     if(NLookedAhead>0)
@@ -39,16 +42,23 @@ void ReadChar()
         current=lookedAhead;    // Char has already been read
         NLookedAhead--;
     }
-    else
+    else     
 	{
         // Read character and skip spaces until 
         // non space character is read
         while(cin.get(current) && (current==' '||current=='\t'||current=='\n'));
 	}
 }
+
+void LookAhead()
+{
+    while(cin.get(lookedAhead) && (lookedAhead==' '||lookedAhead=='\t'||lookedAhead=='\n'));
+    NLookedAhead++;
+}
 void DeclarationPart();
 
 void StatementPart();
+
 // Program := [DeclarationPart] StatementPart
 void Program()
 {
@@ -66,13 +76,13 @@ void DeclarationPart()
 	{
 		Error("'[ attendu'");
 	}
+	Letter();
+	
 }
 // StatementPart := Statement {";" Statement} "."
-void StatementPart()
-{
-
-}
+void StatementPart();
 // Statement := AssignementStatement
+void Statement();
 // AssignementStatement := Letter "=" Expression
 
 // Expression := SimpleExpression [RelationalOperator SimpleExpression]
@@ -84,11 +94,7 @@ void StatementPart()
 
 // MultiplicativeOperator := "*" | "/" | "%" | "&&"
 
-void LookAhead()
-{
-    while(cin.get(lookedAhead) && (lookedAhead==' '||lookedAhead=='\t'||lookedAhead=='\n'));
-    NLookedAhead++;
-}
+
 // Letter := "a"|...|"z"
 void Letter()
 {
@@ -320,13 +326,6 @@ int main()
 	
 
 }
-		
-			
-
-/*
 
 
-
-
-
-*/
+//not dans le facteur
