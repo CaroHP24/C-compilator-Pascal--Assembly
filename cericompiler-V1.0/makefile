@@ -1,7 +1,7 @@
 all:	test
 clean:
 		rm *.o *.s
-		rm tokeniser.cpp
+		rm tokensiser.cpp
 tokeniser.cpp:	tokeniser.l
 		flex++ -d -otokeniser.cpp tokeniser.l
 tokeniser.o:	tokeniser.cpp
