@@ -24,17 +24,20 @@ ws      [ \t\n\r]+
 alpha   [A-Za-z]
 digit   [0-9]
 number  {digit}+
+keyword ("if" | "then" | "else" | "while" | "do" | "for" | "to" | "begin" | "end")
 id	{alpha}({alpha}|{digit})*
 addop	(\+|\-|\|\|)
 mulop	(\*|\/|%|\&\&)
 relop	(\<|\>|"=="|\<=|\>=|!=)
 unknown [^\"A-Za-z0-9 \n\r\t\(\)\<\>\=\!\%\&\|\}\-\;\.]+
 
+
 %%
 
 {addop}		return ADDOP;
 {mulop}		return MULOP;
 {relop}		return RELOP;
+{keyword}	return KEYWORD;
 {number}	return NUMBER;
 {id}		return ID;
 {stringconst}	return STRINGCONST;

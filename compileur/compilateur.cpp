@@ -298,10 +298,19 @@ void AssignementStatement(void){
 	Expression();
 	cout << "\tpop "<<variable<<endl;
 }
-
+ 
 // Statement := AssignementStatement
 void Statement(void){
 	AssignementStatement();
+}
+
+void IfStatement()
+{
+	if(current!=KEYWORD)
+	{
+		Error("On veux un mot clé");
+	}
+	if(lexer->YYText()!="if")
 }
 
 // StatementPart := Statement {";" Statement} "."
