@@ -281,7 +281,7 @@ void Expression(void){
 		cout << "Suite"<<TagNumber<<":"<<endl;
 	}
 }
-int IsKeyWord(char *kw)
+int IsKeyWord(const char *kw)
 {
 	if(current != KEYWORD) //Si pas un KeyWord, erreur
 	{
@@ -292,7 +292,7 @@ int IsKeyWord(char *kw)
 		return !strcmp(kw,(lexer->YYText())); //return le char 
 	}
 }
-void ReadKeyWord(char * kw)
+void ReadKeyWord(const char * kw)
 {
 	if(!IsKeyWord(kw))
 	{
@@ -337,29 +337,36 @@ void Statement(void)
 }
 void IfStatement() // if condition then instruction else instruction 2
 {
+	int tag_local=TagNumber;
     if (current != KEYWORD || strcmp(lexer->YYText(), "IF") != 0) //SI current == IF
 	{
         Error("Expected 'IF' keyword");
     }
     current=(TOKEN)lexer->yylex(); // Consume the 'if' 
     Expression(); // condition
+	cout << "IfBlock" <<tag_local<<":"<< endl;
+	cout<<"\tpop %rax"<<endl;
+	cout<<"\tcmpq $0, %rax"<<endl;
+	cout<<"\tje ElseBlock"<<tag_local<<endl;
 
     if (current != KEYWORD || strcmp(lexer->YYText(), "THEN") != 0) 
 	{
-        Error("Expected 'then' keyword");
+        Error("Expected 'THEN' keyword");
     }
     current=(TOKEN)lexer->yylex(); // Consume the 'then' 
 
-	cout << "IfBlock:" << endl;
+	
     Statement(); // Parse the statement after 'then'
-
+	cout<<"\tjmp FinBlock"<<tag_local<<endl;
     // Check if there's an 'else' part
+	cout << "ElseBlock"<<tag_local<<":"<< endl;
     if (current == KEYWORD && strcmp(lexer->YYText(), "ELSE") == 0)
 	{
         current=(TOKEN)lexer->yylex(); // Consume the 'else' 
-        cout << "ElseBlock:" << endl;
+        
         Statement(); // Parse the statement after 'else'
     }
+	cout<<"FinBlock"<<tag_local<<":"<< endl;
 }
 
 // StatementPart := Statement {";" Statement} "."
