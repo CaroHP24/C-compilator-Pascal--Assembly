@@ -24,7 +24,7 @@ ws      [ \t\n\r]+
 alpha   [A-Za-z]
 digit   [0-9]
 number  {digit}+
-keyword ("if" | "then" | "else" | "while" | "do" | "for" | "to" | "begin" | "end")
+keyword (IF|THEN|ELSE|WHILE|DO|FOR|TO|BEGIN|END)
 id	{alpha}({alpha}|{digit})*
 addop	(\+|\-|\|\|)
 mulop	(\*|\/|%|\&\&)
@@ -37,8 +37,8 @@ unknown [^\"A-Za-z0-9 \n\r\t\(\)\<\>\=\!\%\&\|\}\-\;\.]+
 {addop}		return ADDOP;
 {mulop}		return MULOP;
 {relop}		return RELOP;
-{keyword}	return KEYWORD;
 {number}	return NUMBER;
+{keyword}   return KEYWORD;
 {id}		return ID;
 {stringconst}	return STRINGCONST;
 "["		return RBRACKET;
@@ -67,4 +67,3 @@ unknown [^\"A-Za-z0-9 \n\r\t\(\)\<\>\=\!\%\&\|\}\-\;\.]+
 {unknown}	return UNKNOWN;
 
 %%
-

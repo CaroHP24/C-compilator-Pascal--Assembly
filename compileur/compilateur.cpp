@@ -44,7 +44,8 @@ FlexLexer* lexer = new yyFlexLexer; // This is the flex tokeniser
 set<string> DeclaredVariables;
 unsigned long TagNumber=0;
 
-bool IsDeclared(const char *id){
+bool IsDeclared(const char *id)
+{
 	return DeclaredVariables.find(id)!=DeclaredVariables.end();
 }
 
@@ -280,6 +281,29 @@ void Expression(void){
 		cout << "Suite"<<TagNumber<<":"<<endl;
 	}
 }
+int IsKeyWord(char *kw)
+{
+	if(current != KEYWORD) //Si pas un KeyWord, erreur
+	{
+		return 0;
+	}
+	else
+	{
+		return !strcmp(kw,(lexer->YYText())); //return le char 
+	}
+}
+void ReadKeyWord(char * kw)
+{
+	if(!IsKeyWord(kw))
+	{
+		Error("je veux un keyword");
+	}
+	else
+	{
+		current=(TOKEN)lexer->yylex();
+	}
+}
+void IfStatement();
 
 // AssignementStatement := Identifier ":=" Expression
 void AssignementStatement(void){
@@ -300,21 +324,47 @@ void AssignementStatement(void){
 }
  
 // Statement := AssignementStatement
-void Statement(void){
-	AssignementStatement();
-}
-
-void IfStatement()
+void Statement(void)
 {
-	if(current!=KEYWORD)
+	if(strcmp(lexer->YYText(), "IF") == 0)
 	{
-		Error("On veux un mot clé");
+		IfStatement();
 	}
-	if(lexer->YYText()!="if")
+	else
+	{
+		AssignementStatement();
+	}
+}
+void IfStatement() // if condition then instruction else instruction 2
+{
+    if (current != KEYWORD || strcmp(lexer->YYText(), "IF") != 0) //SI current == IF
+	{
+        Error("Expected 'IF' keyword");
+    }
+    current=(TOKEN)lexer->yylex(); // Consume the 'if' 
+    Expression(); // condition
+
+    if (current != KEYWORD || strcmp(lexer->YYText(), "THEN") != 0) 
+	{
+        Error("Expected 'then' keyword");
+    }
+    current=(TOKEN)lexer->yylex(); // Consume the 'then' 
+
+	cout << "IfBlock:" << endl;
+    Statement(); // Parse the statement after 'then'
+
+    // Check if there's an 'else' part
+    if (current == KEYWORD && strcmp(lexer->YYText(), "ELSE") == 0)
+	{
+        current=(TOKEN)lexer->yylex(); // Consume the 'else' 
+        cout << "ElseBlock:" << endl;
+        Statement(); // Parse the statement after 'else'
+    }
 }
 
 // StatementPart := Statement {";" Statement} "."
-void StatementPart(void){
+void StatementPart(void)
+{
 	cout << "\t.text\t\t# The following lines contain the program"<<endl;
 	cout << "\t.globl main\t# The main function must be visible from outside"<<endl;
 	cout << "main:\t\t\t# The main function body :"<<endl;
@@ -330,7 +380,8 @@ void StatementPart(void){
 }
 
 // Program := [DeclarationPart] StatementPart
-void Program(void){
+void Program(void)
+{
 	if(current==RBRACKET)
 		DeclarationPart();
 	StatementPart();	
@@ -351,10 +402,3 @@ int main(void){	// First version : Source code on standard input and assembly co
 	}
 
 }
-		
-			
-
-
-
-
-
