@@ -26,12 +26,17 @@ IfBlock0:
 	pop %rax
 	cmpq $0, %rax
 	je ElseBlock0
+	push $28
+	pop c
+	jmp FinBlock0
+ElseBlock0:
+FinBlock0:
 	push z
-	push b
+	push $2
 	pop %rax
 	pop %rbx
 	cmpq %rax, %rbx
-	jb Vrai2	# If below
+	je Vrai2	# If equal
 	push $0		# False
 	jmp Suite2
 Vrai2:	push $0xFFFFFFFFFFFFFFFF		# True
@@ -44,7 +49,8 @@ IfBlock1:
 	pop c
 	jmp FinBlock1
 ElseBlock1:
+	push $2
+	pop c
 FinBlock1:
-	jmp FinBlock0
-ElseBlock0:
-FinBlock0:
+	movq %rbp, %rsp		# Restore the position of the stack's top
+	ret			# Return from main function
