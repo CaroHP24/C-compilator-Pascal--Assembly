@@ -12,48 +12,28 @@ main:			# The main function body :
 	pop b
 	push $2
 	pop z
-	push z
+TantQue0:
 	push b
-	pop %rax
-	pop %rbx
-	cmpq %rax, %rbx
-	ja Vrai1	# If above
-	push $0		# False
-	jmp Suite1
-Vrai1:	push $0xFFFFFFFFFFFFFFFF		# True
-Suite1:
-IfBlock0:
-	pop %rax
-	cmpq $0, %rax
-	je ElseBlock0
-	push $28
-	pop c
 	push z
-	push $3
 	pop %rax
 	pop %rbx
 	cmpq %rax, %rbx
-	je Vrai3	# If equal
+	ja Vrai2	# If above
 	push $0		# False
-	jmp Suite3
-Vrai3:	push $0xFFFFFFFFFFFFFFFF		# True
-Suite3:
-IfBlock2:
+	jmp Suite2
+Vrai2:	push $0xFFFFFFFFFFFFFFFF		# True
+Suite2:
 	pop %rax
 	cmpq $0, %rax
-	je ElseBlock2
-	push $22
-	pop c
-	jmp FinBlock2
-ElseBlock2:
-	push $65
-	pop c
-FinBlock2:
-EndBlock1:
-	jmp FinBlock0
-ElseBlock0:
-	push $44
-	pop c
-FinBlock0:
+	je FinTantQue0
+	push b
+	push $1
+	pop %rbx
+	pop %rax
+	subq	%rbx, %rax	# SUB
+	push %rax
+	pop b
+	jmp TantQue0
+FinTantQue0:
 	movq %rbp, %rsp		# Restore the position of the stack's top
 	ret			# Return from main function

@@ -318,7 +318,7 @@ void ReadKeyWord(const char * kw)
 	}
 }
 void IfStatement();
-
+void WhileStatement();
 // AssignementStatement := Identifier ":=" Expression
 void AssignementStatement(void)
 {
@@ -430,14 +430,22 @@ void WhileStatement()
 	{
 		Error("Expected 'WHILE' keyword");
 	}
+	cout << "TantQue" <<tag_local<<":"<< endl;
 	current=(TOKEN)lexer->yylex();//consume WHILE
 	Expression();//parse condition
 
-	cout << "TantQue" <<tag_local<<":"<< endl;
-	cout<<"\tpop %rax"<<endl;
-	cout<<"\tcmpq $0, %rax"<<endl;
-	cout<<"\tje FinTantQue"<<tag_local<<endl;
-	
+	cout << "\tpop %rax" << endl; 
+    cout << "\tcmpq $0, %rax" << endl; 
+    cout << "\tje FinTantQue" << tag_local << endl;
+
+	if(current !=KEYWORD || strcmp(lexer->YYText(), "DO")!=0)
+	{
+		Error("Expected 'DO' keyword");
+	}
+	current=(TOKEN)lexer->yylex();// Consomme 'DO'
+	Statement();
+	cout<<"\tjmp TantQue"<<tag_local<<endl;
+	cout<<"FinTantQue"<<tag_local<<":"<<endl;
 }
 
 // StatementPart := Statement {";" Statement} "."
