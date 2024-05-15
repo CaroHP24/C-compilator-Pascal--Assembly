@@ -531,8 +531,8 @@ static const flex_int32_t yy_rule_can_match_eol[21] =
 
 static const flex_int16_t yy_rule_linenum[20] =
     {   0,
-       37,   38,   39,   40,   41,   42,   43,   44,   45,   46,
-       47,   48,   49,   50,   51,   52,   54,   55,   67
+       37,   38,   39,   40,   41,   42,   43,   45,   46,   47,
+       48,   49,   50,   51,   52,   53,   56,   57,   69
     } ;
 
 /* The intent behind this definition is that it'll catch
@@ -880,62 +880,62 @@ return STRINGCONST;
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 44 "tokeniser.l"
+#line 45 "tokeniser.l"
 return RBRACKET;
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 45 "tokeniser.l"
+#line 46 "tokeniser.l"
 return LBRACKET;
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 46 "tokeniser.l"
+#line 47 "tokeniser.l"
 return COMMA;
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 47 "tokeniser.l"
+#line 48 "tokeniser.l"
 return SEMICOLON;
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 48 "tokeniser.l"
+#line 49 "tokeniser.l"
 return DOT;
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 49 "tokeniser.l"
+#line 50 "tokeniser.l"
 return ASSIGN;
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 50 "tokeniser.l"
+#line 51 "tokeniser.l"
 return RPARENT;
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 51 "tokeniser.l"
+#line 52 "tokeniser.l"
 return LPARENT;
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 52 "tokeniser.l"
+#line 53 "tokeniser.l"
 return NOT;
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 53 "tokeniser.l"
+#line 55 "tokeniser.l"
 return FEOF;
 	YY_BREAK
 case 17:
 /* rule 17 can match eol */
 YY_RULE_SETUP
-#line 54 "tokeniser.l"
+#line 56 "tokeniser.l"
 {/* skip blanks and tabs */};
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 55 "tokeniser.l"
+#line 57 "tokeniser.l"
 { /* Skip comments between '(*' and '*)' */
 		int c;
 		while((c = yyinput()) != 0){
@@ -950,12 +950,12 @@ YY_RULE_SETUP
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 67 "tokeniser.l"
+#line 69 "tokeniser.l"
 return UNKNOWN;
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 69 "tokeniser.l"
+#line 70 "tokeniser.l"
 ECHO;
 	YY_BREAK
 #line 962 "tokeniser.cpp"
@@ -2082,5 +2082,5 @@ void yyfree (void * ptr )
 
 /* %ok-for-header */
 
-#line 69 "tokeniser.l"
+#line 70 "tokeniser.l"
 

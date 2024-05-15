@@ -17,7 +17,7 @@ main:			# The main function body :
 	pop %rax
 	pop %rbx
 	cmpq %rax, %rbx
-	jb Vrai1	# If below
+	ja Vrai1	# If above
 	push $0		# False
 	jmp Suite1
 Vrai1:	push $0xFFFFFFFFFFFFFFFF		# True
@@ -28,29 +28,32 @@ IfBlock0:
 	je ElseBlock0
 	push $28
 	pop c
-	jmp FinBlock0
-ElseBlock0:
-FinBlock0:
 	push z
-	push $2
+	push $3
 	pop %rax
 	pop %rbx
 	cmpq %rax, %rbx
-	je Vrai2	# If equal
+	je Vrai3	# If equal
 	push $0		# False
-	jmp Suite2
-Vrai2:	push $0xFFFFFFFFFFFFFFFF		# True
-Suite2:
-IfBlock1:
+	jmp Suite3
+Vrai3:	push $0xFFFFFFFFFFFFFFFF		# True
+Suite3:
+IfBlock2:
 	pop %rax
 	cmpq $0, %rax
-	je ElseBlock1
+	je ElseBlock2
 	push $22
 	pop c
-	jmp FinBlock1
-ElseBlock1:
-	push $2
+	jmp FinBlock2
+ElseBlock2:
+	push $65
 	pop c
-FinBlock1:
+FinBlock2:
+EndBlock1:
+	jmp FinBlock0
+ElseBlock0:
+	push $44
+	pop c
+FinBlock0:
 	movq %rbp, %rsp		# Restore the position of the stack's top
 	ret			# Return from main function

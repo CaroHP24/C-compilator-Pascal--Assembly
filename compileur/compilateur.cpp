@@ -75,20 +75,24 @@ void Error(string s){
 // Letter := "a"|...|"z"
 	
 		
-void Identifier(void){
+void Identifier(void)
+{
 	cout << "\tpush "<<lexer->YYText()<<endl;
 	current=(TOKEN) lexer->yylex();
 }
 
-void Number(void){
+void Number(void)
+{
 	cout <<"\tpush $"<<atoi(lexer->YYText())<<endl;
 	current=(TOKEN) lexer->yylex();
 }
 
 void Expression(void);			// Called by Term() and calls Term()
 
-void Factor(void){
-	if(current==RPARENT){
+void Factor(void)
+{
+	if(current==RPARENT)
+	{
 		current=(TOKEN) lexer->yylex();
 		Expression();
 		if(current!=LPARENT)
@@ -107,7 +111,8 @@ void Factor(void){
 }
 
 // MultiplicativeOperator := "*" | "/" | "%" | "&&"
-OPMUL MultiplicativeOperator(void){
+OPMUL MultiplicativeOperator(void)
+{
 	OPMUL opmul;
 	if(strcmp(lexer->YYText(),"*")==0)
 		opmul=MUL;
@@ -123,10 +128,12 @@ OPMUL MultiplicativeOperator(void){
 }
 
 // Term := Factor {MultiplicativeOperator Factor}
-void Term(void){
+void Term(void)
+{
 	OPMUL mulop;
 	Factor();
-	while(current==MULOP){
+	while(current==MULOP)
+	{
 		mulop=MultiplicativeOperator();		// Save operator in local variable
 		Factor();
 		cout << "\tpop %rbx"<<endl;	// get first operand
@@ -157,7 +164,8 @@ void Term(void){
 }
 
 // AdditiveOperator := "+" | "-" | "||"
-OPADD AdditiveOperator(void){
+OPADD AdditiveOperator(void)
+{
 	OPADD opadd;
 	if(strcmp(lexer->YYText(),"+")==0)
 		opadd=ADD;
@@ -171,10 +179,12 @@ OPADD AdditiveOperator(void){
 }
 
 // SimpleExpression := Term {AdditiveOperator Term}
-void SimpleExpression(void){
+void SimpleExpression(void)
+{
 	OPADD adop;
 	Term();
-	while(current==ADDOP){
+	while(current==ADDOP)
+	{
 		adop=AdditiveOperator();		// Save operator in local variable
 		Term();
 		cout << "\tpop %rbx"<<endl;	// get first operand
@@ -198,7 +208,8 @@ void SimpleExpression(void){
 }
 
 // DeclarationPart := "[" Ident {"," Ident} "]"
-void DeclarationPart(void){
+void DeclarationPart(void)
+{
 	if(current!=RBRACKET)
 		Error("caractère '[' attendu");
 	cout << "\t.data"<<endl;
@@ -224,7 +235,8 @@ void DeclarationPart(void){
 }
 
 // RelationalOperator := "==" | "!=" | "<" | ">" | "<=" | ">="  
-OPREL RelationalOperator(void){
+OPREL RelationalOperator(void)
+{
 	OPREL oprel;
 	if(strcmp(lexer->YYText(),"==")==0)
 		oprel=EQU;
@@ -244,10 +256,12 @@ OPREL RelationalOperator(void){
 }
 
 // Expression := SimpleExpression [RelationalOperator SimpleExpression]
-void Expression(void){
+void Expression(void)
+{
 	OPREL oprel;
 	SimpleExpression();
-	if(current==RELOP){
+	if(current==RELOP)
+	{
 		oprel=RelationalOperator();
 		SimpleExpression();
 		cout << "\tpop %rax"<<endl;
@@ -306,11 +320,13 @@ void ReadKeyWord(const char * kw)
 void IfStatement();
 
 // AssignementStatement := Identifier ":=" Expression
-void AssignementStatement(void){
+void AssignementStatement(void)
+{
 	string variable;
 	if(current!=ID)
 		Error("Identificateur attendu");
-	if(!IsDeclared(lexer->YYText())){
+	if(!IsDeclared(lexer->YYText()))
+	{
 		cerr << "Erreur : Variable '"<<lexer->YYText()<<"' non déclarée"<<endl;
 		exit(-1);
 	}
@@ -322,7 +338,7 @@ void AssignementStatement(void){
 	Expression();
 	cout << "\tpop "<<variable<<endl;
 }
- 
+void BlockStatement();
 // Statement := AssignementStatement
 void Statement(void)
 {
@@ -330,20 +346,31 @@ void Statement(void)
 	{
 		IfStatement();
 	}
+	else if (strcmp(lexer->YYText(), "BEGIN") == 0)
+	{
+		BlockStatement();
+	}
+	else if(strcmp(lexer->YYText(), "WHILE")==0)
+	{
+		WhileStatement();
+	}
 	else
 	{
 		AssignementStatement();
 	}
 }
+//IfStatement := "IF" Expression "THEN" Statement [ "ELSE" Statement ]
 void IfStatement() // if condition then instruction else instruction 2
 {
-	int tag_local=TagNumber;
+	int tag_local=TagNumber++;
+
     if (current != KEYWORD || strcmp(lexer->YYText(), "IF") != 0) //SI current == IF
 	{
         Error("Expected 'IF' keyword");
     }
+	
     current=(TOKEN)lexer->yylex(); // Consume the 'if' 
-    Expression(); // condition
+    Expression(); // Parse the condition
 	cout << "IfBlock" <<tag_local<<":"<< endl;
 	cout<<"\tpop %rax"<<endl;
 	cout<<"\tcmpq $0, %rax"<<endl;
@@ -353,13 +380,13 @@ void IfStatement() // if condition then instruction else instruction 2
 	{
         Error("Expected 'THEN' keyword");
     }
-    current=(TOKEN)lexer->yylex(); // Consume the 'then' 
 
+    current=(TOKEN)lexer->yylex(); // Consume the 'then' 
 	
     Statement(); // Parse the statement after 'then'
 	cout<<"\tjmp FinBlock"<<tag_local<<endl;
-    // Check if there's an 'else' part
 	cout << "ElseBlock"<<tag_local<<":"<< endl;
+	// Check if there's an 'else' part
     if (current == KEYWORD && strcmp(lexer->YYText(), "ELSE") == 0)
 	{
         current=(TOKEN)lexer->yylex(); // Consume the 'else' 
@@ -367,6 +394,50 @@ void IfStatement() // if condition then instruction else instruction 2
         Statement(); // Parse the statement after 'else'
     }
 	cout<<"FinBlock"<<tag_local<<":"<< endl;
+}
+
+//BlockStatement := "BEGIN" Statement { ";" Statement } "END"
+void BlockStatement()
+{
+	int tag_local=TagNumber++;
+
+	if (current != KEYWORD || strcmp(lexer->YYText(), "BEGIN") != 0) //SI current != BEGIN
+	{
+        Error("Expected 'BEGIN' keyword");
+    }
+
+	current=(TOKEN)lexer->yylex(); // Consume the 'begin' 
+	Statement();
+
+	while((strcmp(lexer->YYText(), ";") == 0))//if ; continue
+	{
+		current=(TOKEN)lexer->yylex();
+		Statement();
+	}
+	if (current != KEYWORD || strcmp(lexer->YYText(), "END") != 0) //doit se terminer par END
+	{
+        Error("Expected 'END' keyword");
+    }
+	current = (TOKEN)lexer->yylex(); // Consume the 'END'
+	cout<<"EndBlock"<<tag_local<<":"<< endl;
+}
+
+void WhileStatement()
+{
+	int tag_local=TagNumber++;
+
+	if(current !=KEYWORD || strcmp(lexer->YYText(), "WHILE")!= 0)
+	{
+		Error("Expected 'WHILE' keyword");
+	}
+	current=(TOKEN)lexer->yylex();//consume WHILE
+	Expression();//parse condition
+
+	cout << "TantQue" <<tag_local<<":"<< endl;
+	cout<<"\tpop %rax"<<endl;
+	cout<<"\tcmpq $0, %rax"<<endl;
+	cout<<"\tje FinTantQue"<<tag_local<<endl;
+	
 }
 
 // StatementPart := Statement {";" Statement} "."
@@ -377,7 +448,8 @@ void StatementPart(void)
 	cout << "main:\t\t\t# The main function body :"<<endl;
 	cout << "\tmovq %rsp, %rbp\t# Save the position of the stack's top"<<endl;
 	Statement();
-	while(current==SEMICOLON){
+	while(current==SEMICOLON)
+	{
 		current=(TOKEN) lexer->yylex();
 		Statement();
 	}
@@ -394,7 +466,8 @@ void Program(void)
 	StatementPart();	
 }
 
-int main(void){	// First version : Source code on standard input and assembly code on standard output
+int main(void)
+{	// First version : Source code on standard input and assembly code on standard output
 	// Header for gcc assembler / linker
 	cout << "\t\t\t# This code was produced by the CERI Compiler"<<endl;
 	// Let's proceed to the analysis and code production

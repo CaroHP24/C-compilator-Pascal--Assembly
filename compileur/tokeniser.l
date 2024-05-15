@@ -41,6 +41,7 @@ unknown [^\"A-Za-z0-9 \n\r\t\(\)\<\>\=\!\%\&\|\}\-\;\.]+
 {keyword}   return KEYWORD;
 {id}		return ID;
 {stringconst}	return STRINGCONST;
+
 "["		return RBRACKET;
 "]"		return LBRACKET;
 ","		return COMMA;
@@ -50,6 +51,7 @@ unknown [^\"A-Za-z0-9 \n\r\t\(\)\<\>\=\!\%\&\|\}\-\;\.]+
 "("		return RPARENT;
 ")"		return LPARENT;
 "!"		return NOT;
+
 <<EOF>>		return FEOF;
 {ws}    {/* skip blanks and tabs */};
 "(*"    { /* Skip comments between '(*' and '*)' */
@@ -65,5 +67,4 @@ unknown [^\"A-Za-z0-9 \n\r\t\(\)\<\>\=\!\%\&\|\}\-\;\.]+
 	};
 
 {unknown}	return UNKNOWN;
-
 %%
