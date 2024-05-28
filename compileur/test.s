@@ -1,39 +1,53 @@
 			# This code was produced by the CERI Compiler
-	.data
-	.align 8
+.data
+FormatString1:
+	.string "%llu"
+a:	.quad 0
 b:	.quad 0
-c:	.quad 0
-z:	.quad 0
+c:	.double 0.0
+d:	.byte 0
 	.text		# The following lines contain the program
 	.globl main	# The main function must be visible from outside
 main:			# The main function body :
 	movq %rsp, %rbp	# Save the position of the stack's top
-	push $6
-	pop b
 	push $2
-	pop z
-TantQue0:
-	push b
-	push z
-	pop %rax
-	pop %rbx
-	cmpq %rax, %rbx
-	ja Vrai2	# If above
-	push $0		# False
-	jmp Suite2
-Vrai2:	push $0xFFFFFFFFFFFFFFFF		# True
-Suite2:
-	pop %rax
-	cmpq $0, %rax
-	je FinTantQue0
-	push b
-	push $1
-	pop %rbx
-	pop %rax
-	subq	%rbx, %rax	# SUB
-	push %rax
+	pop a
+	push a
+	pop %rsi	# The value to be displayed
+	movq $FormatString1, %rdi	# "%llu\n"
+	movl	$0, %eax
+	push %rbp 	#save the value in %rbp
+	call	printf@PLT
+	 pop %rbp
+	push $5
 	pop b
-	jmp TantQue0
-FinTantQue0:
-	movq %rbp, %rsp		# Restore the position of the stack's top
-	ret			# Return from main function
+	push b
+	pop %rsi	# The value to be displayed
+	movq $FormatString1, %rdi	# "%llu\n"
+	movl	$0, %eax
+	push %rbp 	#save the value in %rbp
+	call	printf@PLT
+	 pop %rbp
+	subq $8,%rsp			# allocate 8 bytes on stack's top
+	movl	$0, (%rsp)	# Conversion of 2.5 (32 bit high part)
+	movl	$1074003968, 4(%rsp)	# Conversion of 2.5 (32 bit low part)
+	pop c
+	push c
+	pop %rsi	# The value to be displayed
+	movq $FormatString1, %rdi	# "%llu\n"
+	movl	$0, %eax
+	push %rbp 	#save the value in %rbp
+	call	printf@PLT
+	 pop %rbp
+	movq $0, %rax
+	movb $'d',%al
+	push %rax	# push a 64-bit version of 'd'
+	pop %rax
+	movb %al,d
+	push d
+	pop %rsi	# The value to be displayed
+	movq $FormatString1, %rdi	# "%llu\n"
+	movl	$0, %eax
+	push %rbp 	#save the value in %rbp
+	call	printf@PLT
+	 pop %rbp

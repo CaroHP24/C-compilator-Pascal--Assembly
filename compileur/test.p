@@ -1,5 +1,13 @@
-[b,c,z]
-b:=6;
-z:=2;
-WHILE b>z DO
-    b:=b-1.
+VAR a,b :INTEGER;
+    c :DOUBLE;
+    d :CHAR.
+
+BEGIN
+    a:=2;
+    DISPLAY a;
+    b:=5;
+    DISPLAY b;
+    c:=2.5;
+    DISPLAY c;
+    d:='d';  
+END.
