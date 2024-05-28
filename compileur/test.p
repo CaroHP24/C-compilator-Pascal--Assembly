@@ -9,5 +9,7 @@ BEGIN
     DISPLAY b;
     c:=2.5;
     DISPLAY c;
-    d:='d';  
+    d:='d';
+    DISPLAY d;
+    DISPLAY '='
 END.

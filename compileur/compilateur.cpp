@@ -728,19 +728,44 @@ void ForStatement()
 }
 
 // Display <expression> 
-//si c'est un integer
 
 void Display()
 {
 	enum DATATYPE type;
+	int tag_local=TagNumber++;
 	current=(TOKEN)lexer->yylex();
 	type=Expression();
-	cout << "\tpop %rsi\t# The value to be displayed"<<endl;
-	cout << "\tmovq $FormatString1, %rdi\t# \"%llu\\n\""<<endl;
-	cout << "\tmovl	$0, %eax"<<endl;
-	cout<<"\tpush %rbp \t#save the value in %rbp"<<endl;
-	cout << "\tcall	printf@PLT"<<endl;
-	cout<<"\t pop %rbp"<<endl;
+	switch(type)
+	{
+		case INTEGER://si c'est un integer
+			cout << "\tpop %rsi\t# The value to be displayed"<<endl;
+			cout << "\tmovq $FormatString1, %rdi\t# \"%llu\\n\""<<endl;
+			cout << "\tmovl	$0, %eax"<<endl;
+			cout<<"\tpush %rbp \t#save the value in %rbp"<<endl;
+			cout << "\tcall	printf@PLT"<<endl;
+			cout<<"\t pop %rbp"<<endl;
+			break;
+		case DOUBLE://si c'est un double
+			cout << "\tmovsd (%rsp), %xmm0\t# The value to be displayed" << endl;
+            cout << "\taddq $8, %rsp\t# Remove the double value from the stack" << endl;
+            cout << "\tmovq $FormatString2, %rdi\t# \"%lf\\n\"" << endl;
+            cout << "\tmovl $1, %eax\t# Number of floating-point arguments" << endl;
+            cout << "\tpush %rbp \t# save the value in %rbp" << endl;
+            cout << "\tcall printf@PLT" << endl;
+            cout << "\tpop %rbp" << endl;
+            break;
+		case CHAR://si c'est un char
+			cout << "\tpop %rsi\t# The value to be displayed" << endl;
+            cout << "\tmovq $FormatString3, %rdi\t# \"%c\\n\"" << endl;
+            cout << "\tmovl $0, %eax" << endl;
+            cout << "\tpush %rbp \t# save the value in %rbp" << endl;
+            cout << "\tcall printf@PLT" << endl;
+            cout << "\tpop %rbp" << endl;
+            break;
+		default:
+			Error("ne peux pas afficher cela");
+	}
+
 }
 
 
@@ -777,8 +802,12 @@ int main(void)
 	// Header for gcc assembler / linker
 	cout << "\t\t\t# This code was produced by the CERI Compiler"<<endl;
 	cout << ".data"<<endl;
-	cout << "FormatString1:"<<endl;
-	cout<<"\t.string \"%llu\""<<endl;
+	cout << "FormatString1:" << endl;
+    cout << "\t.string \"%llu\\n\"" << endl;
+    cout << "FormatString2:" << endl;
+    cout << "\t.string \"%lf\\n\"" << endl;
+    cout << "FormatString3:" << endl;
+    cout << "\t.string \"%c\\n\"" << endl;
 	// Let's proceed to the analysis and code production
 	current=(TOKEN) lexer->yylex();
 	Program();
