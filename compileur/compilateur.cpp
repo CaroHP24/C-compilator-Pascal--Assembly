@@ -33,7 +33,7 @@ using namespace std;
 enum OPREL {EQU, DIFF, INF, SUP, INFE, SUPE, WTFR};
 enum OPADD {ADD, SUB, OR, WTFA};
 enum OPMUL {MUL, DIV, MOD, AND ,WTFM};
-enum DATATYPE {INTEGER, BOOLEAN, CHAR, DOUBLE};
+enum DATATYPE {INTEGER, BOOLEAN, CHAR, DOUBLE, ARRAY};
 
 TOKEN current;				// Current token
 
@@ -141,7 +141,10 @@ enum DATATYPE Char()
 	return CHAR;
 
 }
-
+enum DATATYPE Array()
+{
+	
+}
 enum DATATYPE Expression();			// Called by Term() and calls Term()
 
 enum DATATYPE Factor(void)
@@ -166,6 +169,8 @@ enum DATATYPE Factor(void)
 		case CHARCONST:
 			type=Char();
 			break;
+		case TAB:
+			type=Array();
 		default:
 			Error("'(', ou constante ou variable attendue.");
 	};
@@ -319,6 +324,11 @@ enum DATATYPE Type()
 		current=(TOKEN) lexer->yylex();
 		return CHAR;
 	}
+	else if(strcmp(lexer->YYText(),"ARRAY")==0) //ARRAY[1..5]
+	{
+		current=(TOKEN)lexer->yylex();
+		return ARRAY;
+	}
 	else
 	{
 		Error("type inconnu");
@@ -373,6 +383,8 @@ void VarDeclaration()
             case CHAR:
                 cout << ident << ":\t.byte 0" << endl;
                 break;
+			case ARRAY:
+				
             default:
                 Error("type inconnu.");
         };
@@ -477,7 +489,7 @@ enum DATATYPE Expression()
         cout << "\tjmp Suite" << TagNumber << endl;
         cout << "Vrai" << TagNumber << ":\tpush $0xFFFFFFFFFFFFFFFF\t\t# True" << endl;    
         cout << "Suite" << TagNumber << ":" << endl;
-        return BOOLEAN; // This ensures a value is returned for this path
+        return BOOLEAN;
     }
     return type; 
 }
@@ -597,7 +609,7 @@ void IfStatement() // if condition then instruction else instruction 2
     current=(TOKEN)lexer->yylex(); // Consume the 'if' 
 	if(Expression()!=BOOLEAN)// Parse the condition
 	{
-		Error("Doit etre un bool");
+		Error("Expected BOOLEAN");
 	}
 	cout << "IfBlock" <<tag_local<<":"<< endl;
 	cout<<"\tpop %rax"<<endl;
@@ -658,12 +670,12 @@ void WhileStatement()
 	{
 		Error("Expected 'WHILE' keyword");
 	}
-	cout << "TantQue" <<tag_local<<":"<< endl;
 	current=(TOKEN)lexer->yylex();//consume WHILE
-	if(Expression()!=BOOLEAN);//parse condition
+	if(Expression()!=BOOLEAN)// Parse the condition
 	{
 		Error("Expected BOOLEAN");
 	}
+	cout << "TantQue" <<tag_local<<":"<< endl;
 	cout << "\tpop %rax" << endl; 
     cout << "\tcmpq $0, %rax" << endl; 
     cout << "\tje FinTantQue" << tag_local << endl;
@@ -717,12 +729,12 @@ void ForStatement()
 	{
         Error("Expected 'TO' or 'DOWNTO' keyword");
     }
-	bool isDownto;
-	if(strcmp(lexer->YYText(),"DOWNTO")!=0)
+	bool isDownto=0;
+	if(strcmp(lexer->YYText(),"DOWNTO")==0)
 	{
 		isDownto=true; 
 	}
-    current = (TOKEN) lexer->yylex(); // Consume 'TO'
+    current = (TOKEN) lexer->yylex(); // Consume 'TO' or 'DOWNTO
     Expression();
     cout << "\tpop %rbx" << endl;
     cout << "\tmov " << varName << ", %rax" << endl;
@@ -736,7 +748,8 @@ void ForStatement()
 		cout << "\tjg ForEnd" << tag_local << endl;
 	}
     
-    if (current != KEYWORD || strcmp(lexer->YYText(), "DO") != 0) {
+    if (current != KEYWORD || strcmp(lexer->YYText(), "DO") != 0) 
+	{
         Error("Expected 'DO' keyword");
     }
     current = (TOKEN) lexer->yylex(); // Consume 'DO'
@@ -879,13 +892,6 @@ void CaseStatement()
     cout << "EndCase" << tag_local << ":" << endl;
 }
 
-
-
-
-
-
-	
-	
 
 // StatementPart := Statement {";" Statement} "."
 void StatementPart(void)

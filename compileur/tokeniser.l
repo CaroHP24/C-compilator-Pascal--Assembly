@@ -24,7 +24,7 @@ ws      [ \t\n\r]+
 alpha   [A-Za-z]
 digit   [0-9]
 number  {digit}+(\.{digit}+)?
-keyword	(IF|THEN|ELSE|BEGIN|END|FOR|TO|DOWNTO|WHILE|DO|VAR|INTEGER|BOOLEAN|CHAR|DOUBLE|DISPLAY|CASE|OF)
+keyword	(IF|THEN|ELSE|BEGIN|END|FOR|TO|DOWNTO|WHILE|DO|VAR|INTEGER|BOOLEAN|CHAR|DOUBLE|DISPLAY|CASE|OF|ARRAY)
 id	{alpha}({alpha}|{digit})*
 addop	(\+|\-|\|\|)
 mulop	(\*|\/|%|\&\&)
@@ -40,6 +40,7 @@ unknown [^\"A-Za-z0-9 \n\r\t\(\)\<\>\=\!\%\&\|\}\-\;\.]+
 {keyword}	return KEYWORD;
 {id}		return ID;
 {charconst}	return CHARCONST;
+{tab} return TAB;
 "["		return RBRACKET;
 "]"		return LBRACKET;
 ","		return COMMA;
