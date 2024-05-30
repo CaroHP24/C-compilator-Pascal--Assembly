@@ -509,6 +509,7 @@ void WhileStatement();
 void ForStatement();
 void BlockStatement();
 void Display();
+void CaseStatement();
 // AssignementStatement := Identifier ":=" Expression
 void AssignementStatement(void)
 {
@@ -574,6 +575,10 @@ void Statement(void)
 	{
 		Display();
 	}
+	else if (strcmp(lexer->YYText(), "CASE")==0)
+	{
+		CaseStatement();
+	}
 	else
 	{
 		AssignementStatement();
@@ -628,7 +633,7 @@ void BlockStatement()
 	{
         Error("Expected 'BEGIN' keyword");
     }
-
+	cout<<"DebutBlock"<<tag_local<<":"<< endl;
 	current=(TOKEN)lexer->yylex(); // Consume the 'begin' 
 	Statement();
 
@@ -677,22 +682,26 @@ void ForStatement()
     int tag_local = TagNumber++;
     string varName;
     
-    if (current != KEYWORD || strcmp(lexer->YYText(), "FOR") != 0) {
+    if (current != KEYWORD || strcmp(lexer->YYText(), "FOR") != 0) 
+	{
         Error("Expected 'FOR' keyword");
     }
     current = (TOKEN) lexer->yylex(); // Consume 'FOR'
     
-    if (current != ID) {
+    if (current != ID) 
+	{
         Error("Identificateur attendu");
     }
     varName = lexer->YYText();
     
-    if (!IsDeclared(varName.c_str())) {
+    if (!IsDeclared(varName.c_str())) 
+	{
         Error("Variable non déclarée");
     }
     
     current = (TOKEN) lexer->yylex();
-    if (current != ASSIGN) {
+    if (current != ASSIGN) 
+	{
         Error("caractères ':=' attendus");
     }
     current = (TOKEN) lexer->yylex();
@@ -751,7 +760,6 @@ void ForStatement()
 }
 
 // Display <expression> 
-
 void Display()
 {
 	enum DATATYPE type;
@@ -766,7 +774,7 @@ void Display()
 			cout << "\tmovl	$0, %eax"<<endl;
 			cout<<"\tpush %rbp \t#save the value in %rbp"<<endl;
 			cout << "\tcall	printf@PLT"<<endl;
-			cout<<"\t pop %rbp"<<endl;
+			cout<<"\tpop %rbp"<<endl;
 			break;
 		case DOUBLE://si c'est un double
 			cout << "\tmovsd (%rsp), %xmm0\t# The value to be displayed" << endl;
@@ -805,6 +813,79 @@ void Display()
 
 }
 
+void CaseStatement() 
+{
+    int tag_local = TagNumber++;
+	int tag_else;
+    cout << "DebutCase" << tag_local << ":" << endl;
+
+    if (current != KEYWORD || strcmp(lexer->YYText(), "CASE") != 0) 
+    {
+        Error("Expected 'CASE' keyword");
+    }
+
+    current = (TOKEN) lexer->yylex(); // Consume 'CASE'
+    TOKEN exp = current;
+    enum DATATYPE type = Expression();
+    cout << "\tpop %rbx\t# valeur à comparer dans case" << endl;
+
+    if (current != KEYWORD || strcmp(lexer->YYText(), "OF") != 0) 
+    {
+        Error("Expected 'OF' keyword");
+    }
+    current = (TOKEN) lexer->yylex(); // Consume 'OF'
+
+    while (current != KEYWORD || strcmp(lexer->YYText(), "ELSE") != 0) 
+    {
+        int caseTag = TagNumber++;
+        cout << "Case" << caseTag << ":" << endl;
+        Expression();
+        cout << "\tpop %rax" << endl;
+        cout << "\tcmp %rbx, %rax" << endl;
+        cout << "\tjne Case" << caseTag + 1 << endl; // Sinon, saute au cas suivant si existe sinon à ELSE
+        if (current != COLON) 
+        {
+            Error("':' attendu");
+        }
+        current = (TOKEN) lexer->yylex(); // Consume ':'
+        Statement(); // Instructions
+
+        if (current != SEMICOLON) 
+        {
+            break;
+        }
+        current = (TOKEN) lexer->yylex(); // Consume ';'
+		
+        cout << "\tjmp EndCase" << tag_local << endl; // Sauter à la fin du dernier cas
+        tag_else=caseTag + 1 ;
+    }
+
+    if (strcmp(lexer->YYText(), "ELSE") == 0) 
+    {
+		cout<<"Case"<<tag_else<<":"<<endl;
+        current = (TOKEN) lexer->yylex(); // Consume 'ELSE'
+        Statement();
+    } else 
+    {
+        Error("Expected 'ELSE' keyword");
+    }
+    
+    if (current != KEYWORD || strcmp(lexer->YYText(), "END") != 0) 
+    {
+        Error("Expected 'END' keyword");
+    }
+    current = (TOKEN) lexer->yylex(); // Consume 'END'
+
+    cout << "EndCase" << tag_local << ":" << endl;
+}
+
+
+
+
+
+
+	
+	
 
 // StatementPart := Statement {";" Statement} "."
 void StatementPart(void)
@@ -845,8 +926,8 @@ int main(void)
     cout << "\t.string \"%lf\\n\"" << endl;
     cout << "FormatString3:" << endl;
     cout << "\t.string \"%c\\n\"" << endl;
-	cout << "TrueString:\t.string \"TRUE\"\t# used by printf to display the boolean value TRUE"<<endl; 
-	cout << "FalseString:\t.string \"FALSE\"\t# used by printf to display the boolean value FALSE"<<endl; 
+	cout << "TrueString:\t.string \"TRUE\"\t#  TRUE"<<endl; 
+	cout << "FalseString:\t.string \"FALSE\"\t#  FALSE"<<endl; 
 	// Let's proceed to the analysis and code production
 	current=(TOKEN) lexer->yylex();
 	Program();
