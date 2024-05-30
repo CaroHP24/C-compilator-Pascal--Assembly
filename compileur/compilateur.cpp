@@ -132,7 +132,6 @@ enum DATATYPE Number(void){
 	}
 }
 
-
 enum DATATYPE Char()
 {
 	cout<<"\tmovq $0, %rax"<<endl;
@@ -172,8 +171,6 @@ enum DATATYPE Factor(void)
 	};
 	return type;
 }
-
-
 
 // MultiplicativeOperator := "*" | "/" | "%" | "&&"
 OPMUL MultiplicativeOperator(void)
@@ -332,7 +329,7 @@ enum DATATYPE Type()
 // VarDeclaration := Ident {"," Ident} ":" Type
 void VarDeclaration() 
 {
-    set<string> idents;
+    set<string> idents;//liste, si plusieurs var
     enum DATATYPE type;
 
     if (current != ID) 
@@ -365,7 +362,8 @@ void VarDeclaration()
 	{
         switch (type) 
 		{
-            case BOOLEAN:
+            case BOOLEAN:// 0 ou 1
+				cout<<ident<<":\byte 0"<<endl;
             case INTEGER:
                 cout << ident << ":\t.quad 0" << endl;
                 break;
@@ -592,7 +590,10 @@ void IfStatement() // if condition then instruction else instruction 2
     }
 	
     current=(TOKEN)lexer->yylex(); // Consume the 'if' 
-    Expression(); // Parse the condition
+	if(Expression()!=BOOLEAN)// Parse the condition
+	{
+		Error("Doit etre un bool");
+	}
 	cout << "IfBlock" <<tag_local<<":"<< endl;
 	cout<<"\tpop %rax"<<endl;
 	cout<<"\tcmpq $0, %rax"<<endl;
@@ -654,8 +655,10 @@ void WhileStatement()
 	}
 	cout << "TantQue" <<tag_local<<":"<< endl;
 	current=(TOKEN)lexer->yylex();//consume WHILE
-	Expression();//parse condition
-
+	if(Expression()!=BOOLEAN);//parse condition
+	{
+		Error("Expected BOOLEAN");
+	}
 	cout << "\tpop %rax" << endl; 
     cout << "\tcmpq $0, %rax" << endl; 
     cout << "\tje FinTantQue" << tag_local << endl;
@@ -700,17 +703,29 @@ void ForStatement()
     cout << "\tmov %rax, " << varName << endl;
     
     cout << "ForStart" << tag_local << ":" << endl;
-    
     // Condition de la boucle
-    if (current != KEYWORD || strcmp(lexer->YYText(), "TO") != 0) {
-        Error("Expected 'TO' keyword");
+    if (current != KEYWORD || (strcmp(lexer->YYText(), "TO") != 0 && strcmp(lexer->YYText(), "DOWNTO") != 0))
+	{
+        Error("Expected 'TO' or 'DOWNTO' keyword");
     }
+	bool isDownto;
+	if(strcmp(lexer->YYText(),"DOWNTO")!=0)
+	{
+		isDownto=true; 
+	}
     current = (TOKEN) lexer->yylex(); // Consume 'TO'
     Expression();
     cout << "\tpop %rbx" << endl;
     cout << "\tmov " << varName << ", %rax" << endl;
     cout << "\tcmp %rbx, %rax" << endl;
-    cout << "\tjg ForEnd" << tag_local << endl;
+	if(isDownto)
+	{
+		cout<<"\tjl ForEnd"<<tag_local<<endl;
+	}
+	else
+	{
+		cout << "\tjg ForEnd" << tag_local << endl;
+	}
     
     if (current != KEYWORD || strcmp(lexer->YYText(), "DO") != 0) {
         Error("Expected 'DO' keyword");
@@ -718,9 +733,17 @@ void ForStatement()
     current = (TOKEN) lexer->yylex(); // Consume 'DO'
     Statement();
     
-    // Incrémentation de la boucle
+    // Incrementation/decrementation de la boucle
     cout << "\tmov " << varName << ", %rax" << endl;
-    cout << "\tadd $1, %rax" << endl;
+	if(isDownto)
+	{//decremente
+		cout << "\tsub $1, %rax" << endl;
+	}
+	else
+	{//incremente
+		cout << "\tadd $1, %rax" << endl;
+	}
+    
     cout << "\tmov %rax, " << varName << endl;
     cout << "\tjmp ForStart" << tag_local << endl;
     
@@ -762,6 +785,20 @@ void Display()
             cout << "\tcall printf@PLT" << endl;
             cout << "\tpop %rbp" << endl;
             break;
+		case BOOLEAN://si c'est un booleen
+			cout << "\tpop %rdx\t# Zero : False, non-zero : true"<<endl;
+			cout << "\tcmpq $0, %rdx"<<endl;
+			cout << "\tje False"<<endl;
+			cout << "\tmovq $TrueString, %rdi\t# \"TRUE\\n\""<<endl;
+			cout << "\tjmp Next"<<endl;
+			cout << "False"<<":"<<endl;
+			cout << "\tmovq $FalseString, %rdi\t# \"FALSE\\n\""<<endl;
+			cout << "Next"<<":"<<endl;
+			cout << "\tcall	puts@PLT"<<endl;
+			break;
+
+			break;
+		//si Bool
 		default:
 			Error("ne peux pas afficher cela");
 	}
@@ -808,6 +845,8 @@ int main(void)
     cout << "\t.string \"%lf\\n\"" << endl;
     cout << "FormatString3:" << endl;
     cout << "\t.string \"%c\\n\"" << endl;
+	cout << "TrueString:\t.string \"TRUE\"\t# used by printf to display the boolean value TRUE"<<endl; 
+	cout << "FalseString:\t.string \"FALSE\"\t# used by printf to display the boolean value FALSE"<<endl; 
 	// Let's proceed to the analysis and code production
 	current=(TOKEN) lexer->yylex();
 	Program();

@@ -2,8 +2,7 @@ VAR a,b :INTEGER;
     c :DOUBLE;
     d :CHAR.
 
-BEGIN
-    a:=2;
+    a:=2*2;
     DISPLAY a;
     b:=5;
     DISPLAY b;
@@ -11,5 +10,11 @@ BEGIN
     DISPLAY c;
     d:='d';
     DISPLAY d;
-    DISPLAY '='
-END.
+    DISPLAY '=';
+    DISPLAY(a>3);
+    FOR a:= 4 DOWNTO 1 DO
+        BEGIN
+            b:=b+1;
+            DISPLAY b
+        END;
+    DISPLAY b.
