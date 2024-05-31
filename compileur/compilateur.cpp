@@ -1,22 +1,3 @@
-//  A compiler from a very simple Pascal-like structured language LL(k)
-//  to 64-bit 80x86 Assembly langage
-//  Copyright (C) 2019 Pierre Jourlin
-//
-//  This program is free software: you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation, either version 3 of the License, or
-//  (at your option) any later version.
-//  
-//  This program is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//  
-//  You should have received a copy of the GNU General Public License
-//  along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-// Build with "make compilateur"
-
 
 #include <string>
 #include <iostream>
@@ -84,39 +65,14 @@ enum DATATYPE Identifier()
 		Error("Variable non déclarée");
 	}
 	type = DeclaredVariables[lexer->YYText()];
-	if (type == ARRAY)
-	{
-		string arrayName = lexer->YYText();
-		current = (TOKEN)lexer->yylex();
-		if (current != LBRACKET) // Attente de [
-		{
-			Error("'[' attendu pour accéder à un élément de tableau");
-		}
-		current = (TOKEN)lexer->yylex();
-		DATATYPE indexType = Expression(); // Évaluation de l'index
-		if (indexType != INTEGER)
-		{
-			Error("Index du tableau doit être un entier");
-		}
-		if (current != RBRACKET) // Attente de ]
-		{
-			Error("']' attendu après l'index du tableau");
-		}
-		current = (TOKEN)lexer->yylex();
-		cout << "\t# Accès à l'élément du tableau " << arrayName << endl;
-		cout << "\tpop %rax" << endl; // Index dans %rax
-		cout << "\tmovq " << arrayName << "(,%rax,8), %rax" << endl;
-		cout << "\tpush %rax" << endl;
-	}
-	else
-	{
-		cout << "\tpush " << lexer->YYText() << endl;
-		current = (TOKEN)lexer->yylex();
-	}
+	cout << "\tpush " << lexer->YYText() << endl;
+	current = (TOKEN)lexer->yylex();
+	
 	return type;
 }
 
-enum DATATYPE Number(void){
+enum DATATYPE Number(void)
+{
 	bool is_a_decimal=false;
 	double d;					// 64-bit float
 	unsigned int *i;			// pointer to a 32 bit unsigned int 
@@ -180,20 +136,31 @@ enum DATATYPE Factor(void)
 }
 
 // MultiplicativeOperator := "*" | "/" | "%" | "&&"
-OPMUL MultiplicativeOperator(void)
+OPMUL MultiplicativeOperator() 
 {
-	OPMUL opmul;
-	if(strcmp(lexer->YYText(),"*")==0)
-		opmul=MUL;
-	else if(strcmp(lexer->YYText(),"/")==0)
-		opmul=DIV;
-	else if(strcmp(lexer->YYText(),"%")==0)
-		opmul=MOD;
-	else if(strcmp(lexer->YYText(),"&&")==0)
-		opmul=AND;
-	else opmul=WTFM;
-	current=(TOKEN) lexer->yylex();
-	return opmul;
+    OPMUL opmul;
+    if (strcmp(lexer->YYText(), "*") == 0) 
+	{
+        opmul = MUL;
+    } 
+	else if (strcmp(lexer->YYText(), "/") == 0) 
+	{
+        opmul = DIV;
+    } 
+	else if (strcmp(lexer->YYText(), "%") == 0) 
+	{
+        opmul = MOD;
+    } 
+	else if (strcmp(lexer->YYText(), "&&") == 0) 
+	{
+        opmul = AND;
+    } 
+	else 
+	{
+        opmul = WTFM;
+    }
+    current = (TOKEN)lexer->yylex();
+    return opmul;
 }
 
 // Term := Factor {MultiplicativeOperator Factor}
@@ -406,13 +373,12 @@ void VarDeclaration()
     current = (TOKEN) lexer->yylex();
 
     type = Type();
-
     for (const auto& ident : idents) 
 	{
         switch (type) 
 		{
             case BOOLEAN:// 0 ou 1
-				cout<<ident<<":\byte 0"<<endl;
+				cout<<ident<<":\t.byte 0"<<endl;
             case INTEGER:
                 cout << ident << ":\t.quad 0" << endl;
                 break;
@@ -425,7 +391,7 @@ void VarDeclaration()
 			case ARRAY:
 				if(strcmp(lexer->YYText(), "INTEGER") == 0 || strcmp(lexer->YYText(), "BOOLEAN") == 0)
 				{
-					cout<<ident<<":\t.quad ";
+					cout<<ident<<":\t.space ";
 					for (int i=0;i<ArraySize;i++)
 					{
 						if(i!=0)
@@ -456,7 +422,7 @@ void VarDeclaration()
 						{
 							cout<<",";
 						}
-						cout<<"0.0";
+						cout<<"10.0";
 					}
 				}
 				cout<<endl;
@@ -531,7 +497,6 @@ enum DATATYPE Expression()
 			cout<<"\t addq $16, %rsp\t# 2x pop nothing"<<endl;
 			cout<<"\tfcomip %st(1)\t\t# compare op1 and op2 -> %RFLAGS and pop"<<endl;
 			cout<<"\tfaddp %st(1)\t# pop nothing"<<endl;
-
 		} 
 		else
 		{
@@ -602,44 +567,89 @@ void CaseStatement();
 // AssignementStatement := Identifier ":=" Expression
 void AssignementStatement(void)
 {
-	string variable;
-	if(current!=ID)
-	{
-		Error("Identificateur attendu");
-	}
+    int index = -1;
+    string variable;
+    if (current != ID)
+    {
+        Error("Identificateur attendu");
+    }
 
-	if(!IsDeclared(lexer->YYText()))
-	{
-		cerr << "Erreur : Variable '"<<lexer->YYText()<<"' non déclarée"<<endl;
-		exit(-1);
-	}
-
-	variable=lexer->YYText();
-	enum DATATYPE type=DeclaredVariables[variable];
-	current=(TOKEN) lexer->yylex();
-	
-	if(current!=ASSIGN)
-	{
-		Error("caractères ':=' attendus");
-	}
-	current=(TOKEN) lexer->yylex();
-	enum DATATYPE type2=Expression();
-	if(type2!=type)
-	{
-		cerr<<"Type variable "<<type<<endl;
-		cerr<<"Type Expression "<<type2<<endl;
-		Error("types incompatibles dans l'affectation");
-	}
-	if(type==CHAR)
-	{
-		cout << "\tpop %rax"<<endl;
-		cout << "\tmovb %al,"<<variable<<endl;
-	}
-	
-	else
-		cout << "\tpop "<<variable<<endl;
-
+    if (!IsDeclared(lexer->YYText()))
+    {
+        cerr << "Erreur : Variable '" << lexer->YYText() << "' non déclarée" << endl;
+        exit(-1);
+    }
+    variable = lexer->YYText(); // nom
+    enum DATATYPE type = DeclaredVariables[variable];
+    current = (TOKEN)lexer->yylex();
+    if (current == RBRACKET)
+    {
+        current = (TOKEN)lexer->yylex(); // consome [
+        if (current != NUMBER)
+        {
+            Error("Index attendu");
+        }
+        index = atoi(lexer->YYText());
+        current = (TOKEN)lexer->yylex(); // consome index
+        if (current != LBRACKET)
+        {
+            Error("']' attendu");
+        }
+        current = (TOKEN)lexer->yylex(); // consume ']'
+    }
+    if (current != ASSIGN)
+    {
+        Error("caractères ':=' attendus");
+    }
+    current = (TOKEN)lexer->yylex();
+    enum DATATYPE type2 = Expression();
+    if (index != -1) // c'est un tableau
+    {
+        cout << "\tpop %rax" << endl;
+        if (type2 == CHAR)
+        {
+            cout << "\tmovb %al, " << variable << "+" << index * sizeof(char) << endl;
+        }
+        else if (type2 == INTEGER)
+        {
+            cout << "\tmovl %eax, " << variable << "+" << index * sizeof(int) << endl;
+        }
+        else if (type2 == DOUBLE)
+        {
+            cout << "\tmovq %rax, " << variable << "+" << index * sizeof(double) << endl;
+        }
+        else
+        {
+            Error("Type incompatible pour l'index du tableau");
+        }
+    }
+    else // c'est une variable simple
+    {
+        if (type2 != type)
+        {
+            cerr << "Type variable " << type << endl;
+            cerr << "Type Expression " << type2 << endl;
+            Error("types incompatibles dans l'affectation");
+        }
+        else
+        {
+            if (type == CHAR)
+            {
+                cout << "\tpop %rax" << endl;
+                cout << "\tmovb %al," << variable << endl;
+            }
+            else if (type == INTEGER)
+            {
+                cout << "\tpop " << variable << endl;
+            }
+            else if (type == DOUBLE)
+            {
+                cout << "\tpop " << variable << endl;
+            }
+        }
+    }
 }
+
 
 // Statement := AssignementStatement
 void Statement(void)
@@ -895,12 +905,14 @@ void Display()
 			cout << "\tcall	puts@PLT"<<endl;
 			break;
 
+		case ARRAY:
+			cout<<"movq t, %rax"<<endl;
+			cout<<"movl (%rax), %ebx "<<endl;
 			break;
-		//si Bool
+
 		default:
 			Error("ne peux pas afficher cela");
 	}
-
 }
 
 void CaseStatement() 
@@ -1021,5 +1033,4 @@ int main(void)
 		cerr <<"Caractères en trop à la fin du programme : ["<<current<<"]";
 		Error("."); // unexpected characters at the end of program
 	}
-
 }

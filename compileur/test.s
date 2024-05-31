@@ -9,28 +9,30 @@ FormatString3:
 TrueString:	.string "TRUE"	#  TRUE
 FalseString:	.string "FALSE"	#  FALSE
 a:	.quad 0
-b:	.quad 0
-c:	.double 0.0
-d:	.byte 0
-t:	.quad 0,0,0,0,0
+t:	.space 500
 	.text		# The following lines contain the program
 	.globl main	# The main function must be visible from outside
 main:			# The main function body :
 	movq %rsp, %rbp	# Save the position of the stack's top
 DebutBlock0:
-	push $4
-	pop a
-	push $5
-	pop b
-	subq $8,%rsp			# allocate 8 bytes on stack's top
-	movl	$0, (%rsp)	# Conversion of 2.5 (32 bit high part)
-	movl	$1074003968, 4(%rsp)	# Conversion of 2.5 (32 bit low part)
-	pop c
-	movq $0, %rax
-	movb $'d',%al
-	push %rax	# push a 64-bit version of 'd'
+	push $12
 	pop %rax
-	movb %al,d
+	movl %eax, t+4
+	push $16
+	pop %rax
+	movl %eax, t+8
+	push $7
+	pop %rax
+	movl %eax, t+12
+	push $13
+	pop %rax
+	movl %eax, t+16
+	push $9
+	pop %rax
+	movl %eax, t+20
+	push t
+movq t, %rax
+movl (%rax), %ebx 
 EndBlock0:
 	movq %rbp, %rsp		# Restore the position of the stack's top
 	ret			# Return from main function

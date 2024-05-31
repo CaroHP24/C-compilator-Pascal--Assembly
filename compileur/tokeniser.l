@@ -46,7 +46,7 @@ unknown [^\"A-Za-z0-9 \n\r\t\(\)\<\>\=\!\%\&\|\}\-\;\.]+
 ";"		return SEMICOLON;
 "."		return DOT;
 ":"		return COLON;
-":="		return ASSIGN;
+":="	return ASSIGN;
 "("		return RPARENT;
 ")"		return LPARENT;
 "!"		return NOT;
