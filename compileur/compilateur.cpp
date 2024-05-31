@@ -46,6 +46,7 @@ FlexLexer* lexer = new yyFlexLexer; // This is the flex tokeniser
 	
 map<string, enum DATATYPE> DeclaredVariables;
 unsigned long TagNumber=0;
+int ArraySize=0;
 
 bool IsDeclared(const char *id)
 {
@@ -74,37 +75,45 @@ bool IsDouble(const char* str)
     }
     return true;
 }
-
-// Program := [DeclarationPart] StatementPart
-// DeclarationPart := "[" Letter {"," Letter} "]"
-// StatementPart := Statement {";" Statement} "."
-// Statement := AssignementStatement
-// AssignementStatement := Letter "=" Expression
-
-// Expression := SimpleExpression [RelationalOperator SimpleExpression]
-// SimpleExpression := Term {AdditiveOperator Term}
-// Term := Factor {MultiplicativeOperator Factor}
-// Factor := Number | Letter | "(" Expression ")"| "!" Factor
-// Number := Digit{Digit}
-
-// AdditiveOperator := "+" | "-" | "||"
-// MultiplicativeOperator := "*" | "/" | "%" | "&&"
-// RelationalOperator := "==" | "!=" | "<" | ">" | "<=" | ">="  
-// Digit := "0"|"1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9"
-// Letter := "a"|...|"z"
-	
-		
+enum DATATYPE Expression();		
 enum DATATYPE Identifier()
 {
 	enum DATATYPE type;
-	if(!IsDeclared(lexer->YYText())) //si pas déclaré
+	if(!IsDeclared(lexer->YYText())) // Si pas déclaré
 	{
 		Error("Variable non déclarée");
 	}
-	type=DeclaredVariables[lexer->YYText()];
-	cout << "\tpush "<<lexer->YYText()<<endl;
-	current=(TOKEN) lexer->yylex();
-	return type;//retourne le type
+	type = DeclaredVariables[lexer->YYText()];
+	if (type == ARRAY)
+	{
+		string arrayName = lexer->YYText();
+		current = (TOKEN)lexer->yylex();
+		if (current != LBRACKET) // Attente de [
+		{
+			Error("'[' attendu pour accéder à un élément de tableau");
+		}
+		current = (TOKEN)lexer->yylex();
+		DATATYPE indexType = Expression(); // Évaluation de l'index
+		if (indexType != INTEGER)
+		{
+			Error("Index du tableau doit être un entier");
+		}
+		if (current != RBRACKET) // Attente de ]
+		{
+			Error("']' attendu après l'index du tableau");
+		}
+		current = (TOKEN)lexer->yylex();
+		cout << "\t# Accès à l'élément du tableau " << arrayName << endl;
+		cout << "\tpop %rax" << endl; // Index dans %rax
+		cout << "\tmovq " << arrayName << "(,%rax,8), %rax" << endl;
+		cout << "\tpush %rax" << endl;
+	}
+	else
+	{
+		cout << "\tpush " << lexer->YYText() << endl;
+		current = (TOKEN)lexer->yylex();
+	}
+	return type;
 }
 
 enum DATATYPE Number(void){
@@ -141,11 +150,6 @@ enum DATATYPE Char()
 	return CHAR;
 
 }
-enum DATATYPE Array()
-{
-	
-}
-enum DATATYPE Expression();			// Called by Term() and calls Term()
 
 enum DATATYPE Factor(void)
 {
@@ -169,8 +173,6 @@ enum DATATYPE Factor(void)
 		case CHARCONST:
 			type=Char();
 			break;
-		case TAB:
-			type=Array();
 		default:
 			Error("'(', ou constante ou variable attendue.");
 	};
@@ -236,7 +238,6 @@ enum DATATYPE Term(void)
     return type;
 }
 
-
 // AdditiveOperator := "+" | "-" | "||"
 OPADD AdditiveOperator(void)
 {
@@ -298,6 +299,44 @@ enum DATATYPE SimpleExpression()
 }
 
 int IsKeyWord(const char *kw);
+
+int Array()
+{
+	current=(TOKEN)lexer->yylex();
+	if(current!=RBRACKET)
+	{
+		Error("'[' attendu");
+	}
+	current=(TOKEN)lexer->yylex();//consume [
+	int startIndex=atoi(lexer->YYText());
+	current=(TOKEN)lexer->yylex();
+	//suivi de ..
+	if(current!=DOT)
+	{
+		Error("'.' attendu");
+	}
+	current=(TOKEN)lexer->yylex();//consome .
+	if(current!=DOT)
+	{
+		Error("'.' attendu");
+	}
+	current=(TOKEN)lexer->yylex();//consome .
+	int endIndex=atoi(lexer->YYText());
+	
+	current=(TOKEN)lexer->yylex();
+	
+	if(current!=LBRACKET)
+	{
+		Error("']' attendu");
+	}
+	current=(TOKEN)lexer->yylex();//consome ]
+	if(strcmp(lexer->YYText(), "OF") != 0)
+	{
+		Error("OF attendu");
+	}
+	current=(TOKEN)lexer->yylex();//consome OF
+	return (endIndex-startIndex);
+}
 enum DATATYPE Type()
 {
 	if(current!=KEYWORD)
@@ -326,7 +365,7 @@ enum DATATYPE Type()
 	}
 	else if(strcmp(lexer->YYText(),"ARRAY")==0) //ARRAY[1..5]
 	{
-		current=(TOKEN)lexer->yylex();
+		ArraySize=Array();
 		return ARRAY;
 	}
 	else
@@ -335,10 +374,10 @@ enum DATATYPE Type()
 	}
 }
 
-
 // VarDeclaration := Ident {"," Ident} ":" Type
 void VarDeclaration() 
 {
+	int size=ArraySize;
     set<string> idents;//liste, si plusieurs var
     enum DATATYPE type;
 
@@ -384,7 +423,45 @@ void VarDeclaration()
                 cout << ident << ":\t.byte 0" << endl;
                 break;
 			case ARRAY:
-				
+				if(strcmp(lexer->YYText(), "INTEGER") == 0 || strcmp(lexer->YYText(), "BOOLEAN") == 0)
+				{
+					cout<<ident<<":\t.quad ";
+					for (int i=0;i<ArraySize;i++)
+					{
+						if(i!=0)
+						{
+							cout<<",";
+						}
+						cout<<"0";
+					}
+				}
+				else if(strcmp(lexer->YYText(), "CHAR") == 0)
+				{
+					cout<<ident<<":\t.byte ";
+					for (int i=0;i<ArraySize;i++)
+					{
+						if(i!=0)
+						{
+							cout<<",";
+						}
+						cout<<"''";
+					}
+				}
+				else if(strcmp(lexer->YYText(), "DOUBLE") == 0)
+				{
+					cout<<ident<<":\t.double ";
+					for (int i=0;i<ArraySize;i++)
+					{	
+						if(i!=0)
+						{
+							cout<<",";
+						}
+						cout<<"0.0";
+					}
+				}
+				cout<<endl;
+				current=(TOKEN)lexer->yylex();
+				break;
             default:
                 Error("type inconnu.");
         };

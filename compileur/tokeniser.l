@@ -40,7 +40,6 @@ unknown [^\"A-Za-z0-9 \n\r\t\(\)\<\>\=\!\%\&\|\}\-\;\.]+
 {keyword}	return KEYWORD;
 {id}		return ID;
 {charconst}	return CHARCONST;
-{tab} return TAB;
 "["		return RBRACKET;
 "]"		return LBRACKET;
 ","		return COMMA;
